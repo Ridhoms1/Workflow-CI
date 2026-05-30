@@ -51,15 +51,18 @@ jobs:
             exit 1
           fi
 
-          # 2. Mengambil Run ID (Presisi Mutlak, mengunci 32 karakter hex asli MLflow)
-          RUN_ID=$(ls -1 mlruns/0/ | grep -E '^[a-z0-9]{32}$' | head -n 1)
-          echo "Ditemukan Run ID yang valid: $RUN_ID"
+          # 2. RADAR PENCARI: Mencari folder 'model' di manapun ia berada
+          MODEL_PATH=$(find . -type d -path "*/artifacts/model" | head -n 1)
+          echo "Jalur artefak ditemukan di: $MODEL_PATH"
           
-          # Pengecekan ekstra jika gagal mendapat ID
-          if [ -z "$RUN_ID" ]; then
-            echo "ERROR: Run ID 32 karakter tidak ditemukan! Pastikan model tersimpan dengan benar."
+          if [ -z "$MODEL_PATH" ]; then
+            echo "ERROR: Folder artefak model tidak ditemukan! Model gagal dilatih."
             exit 1
           fi
+          
+          # Ekstrak Run ID langsung dari jalurnya (contoh: ./mlruns/0/<RUN_ID>/artifacts/model)
+          RUN_ID=$(echo "$MODEL_PATH" | awk -F'/' '{print $(NF-2)}')
+          echo "Ditemukan Run ID yang valid: $RUN_ID"
           
           # 3. Format nama image diubah otomatis menjadi huruf KECIL semua
           USERNAME=$(echo "${{ secrets.DOCKER_USERNAME }}" | tr '[:upper:]' '[:lower:]')
