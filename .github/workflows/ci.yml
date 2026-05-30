@@ -46,16 +46,23 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          # 1. Mengambil Run ID terbaru secara dinamis dari folder mlruns
-          RUN_ID=$(ls -td mlruns/0/* | head -1 | awk -F/ '{print $3}')
+          # 1. Pengecekan Keamanan Secret
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+            echo "ERROR: DOCKER_USERNAME kosong! Pastikan nama Secret di GitHub Settings sudah tepat."
+            exit 1
+          fi
+
+          # 2. Mengambil Run ID (Presisi Mutlak, hanya menangkap folder)
+          RUN_ID=$(ls -d mlruns/0/*/ -t | head -1 | cut -d '/' -f 3)
           echo "Ditemukan Run ID: $RUN_ID"
           
-          # 2. Menentukan nama image (pastikan formatnya username/nama-image:tag)
-          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/weather-model:latest"
+          # 3. Format nama image diubah otomatis menjadi huruf KECIL semua
+          USERNAME=$(echo "${{ secrets.DOCKER_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_NAME="$USERNAME/weather-model:latest"
           echo "Membangun Docker Image: $IMAGE_NAME"
           
-          # 3. Build image menggunakan MLflow
+          # 4. Build image menggunakan MLflow
           mlflow models build-docker -m "runs:/$RUN_ID/model" -n $IMAGE_NAME
           
-          # 4. Push image ke Docker Hub
+          # 5. Push image ke Docker Hub
           docker push $IMAGE_NAME
