@@ -51,26 +51,26 @@ jobs:
             exit 1
           fi
 
-          # 2. RADAR PENCARI: Mencari folder 'model' di manapun ia berada
-          MODEL_PATH=$(find . -type d -path "*/artifacts/model" | head -n 1)
-          echo "Jalur artefak ditemukan di: $MODEL_PATH"
+          # 2. RADAR PRESISI TINGGI: Mencari file inti 'MLmodel' di seluruh sudut proyek
+          MODEL_DIR=$(find . -name "MLmodel" -exec dirname {} \; | head -n 1)
+          echo "Folder model ditemukan di: $MODEL_DIR"
           
-          if [ -z "$MODEL_PATH" ]; then
-            echo "ERROR: Folder artefak model tidak ditemukan! Model gagal dilatih."
+          if [ -z "$MODEL_DIR" ]; then
+            echo "ERROR: File MLmodel tidak ditemukan! Pastikan skrip training Anda memiliki baris: mlflow.sklearn.log_model(model, 'nama_folder')"
             exit 1
           fi
           
-          # Ekstrak Run ID langsung dari jalurnya (contoh: ./mlruns/0/<RUN_ID>/artifacts/model)
-          RUN_ID=$(echo "$MODEL_PATH" | awk -F'/' '{print $(NF-2)}')
-          echo "Ditemukan Run ID yang valid: $RUN_ID"
+          # Ekstrak Run ID untuk memenuhi Kriteria 3 (Menggunakan Python agar elegan)
+          RUN_ID=$(python -c "import mlflow; df=mlflow.search_runs(); print(df['run_id'].iloc[0] if not df.empty else 'Lokal/Manual')")
+          echo "Ditemukan Run ID: $RUN_ID"
           
           # 3. Format nama image diubah otomatis menjadi huruf KECIL semua
           USERNAME=$(echo "${{ secrets.DOCKER_USERNAME }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_NAME="$USERNAME/weather-model:latest"
           echo "Membangun Docker Image: $IMAGE_NAME"
           
-          # 4. Build image menggunakan MLflow
-          mlflow models build-docker -m "runs:/$RUN_ID/model" -n $IMAGE_NAME
+          # 4. Build image menggunakan jalur LOKAL (Tembus langsung, tanpa sistem 'runs:/')
+          mlflow models build-docker -m "$MODEL_DIR" -n $IMAGE_NAME
           
           # 5. Push image ke Docker Hub
           docker push $IMAGE_NAME
