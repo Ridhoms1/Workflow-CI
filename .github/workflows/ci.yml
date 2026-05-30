@@ -20,15 +20,17 @@ jobs:
         with:
           python-version: '3.12.7'
 
-      - name: Install MLflow
+      - name: Install MLflow & Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install mlflow==2.19.0
+          # Wajib diinstal agar sistem lokal bisa membaca skrip modelling.py
+          pip install pandas scikit-learn
 
       - name: Run MLflow Project
         run: |
-          # Mengeksekusi training menggunakan MLProject
-          mlflow run MLProject_folder/
+          # Mengeksekusi training, BUANG birokrasi Conda dengan --env-manager=local
+          mlflow run MLProject_folder/ --env-manager=local
 
       - name: Upload Artifact to GitHub
         uses: actions/upload-artifact@v4
