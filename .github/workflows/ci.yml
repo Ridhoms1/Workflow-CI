@@ -47,13 +47,19 @@ jobs:
         run: |
           # 1. Pengecekan Keamanan Secret
           if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
-            echo "ERROR: DOCKER_USERNAME kosong! Pastikan nama Secret di GitHub Settings sudah tepat."
+            echo "ERROR: DOCKER_USERNAME kosong!"
             exit 1
           fi
 
-          # 2. Mengambil Run ID (Presisi Mutlak, hanya menangkap folder)
-          RUN_ID=$(ls -d mlruns/0/*/ -t | head -1 | cut -d '/' -f 3)
-          echo "Ditemukan Run ID: $RUN_ID"
+          # 2. Mengambil Run ID (Presisi Mutlak, mengunci 32 karakter hex asli MLflow)
+          RUN_ID=$(ls -1 mlruns/0/ | grep -E '^[a-z0-9]{32}$' | head -n 1)
+          echo "Ditemukan Run ID yang valid: $RUN_ID"
+          
+          # Pengecekan ekstra jika gagal mendapat ID
+          if [ -z "$RUN_ID" ]; then
+            echo "ERROR: Run ID 32 karakter tidak ditemukan! Pastikan model tersimpan dengan benar."
+            exit 1
+          fi
           
           # 3. Format nama image diubah otomatis menjadi huruf KECIL semua
           USERNAME=$(echo "${{ secrets.DOCKER_USERNAME }}" | tr '[:upper:]' '[:lower:]')
