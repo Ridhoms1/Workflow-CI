@@ -26,10 +26,9 @@ jobs:
           pip install mlflow
           pip install pandas scikit-learn
 
-      - name: Run MLflow Project
+      - name: Mengeksekusi training
         run: |
-          # Mengeksekusi training, BUANG birokrasi Conda dengan --env-manager=local
-          mlflow run MLProject_folder/ --env-manager=local
+          mlflow run MLProject_folder --experiment-name="Weather_Basic_Experiment" --env-manager=local
 
       - name: Upload Artifact to GitHub
         uses: actions/upload-artifact@v4
