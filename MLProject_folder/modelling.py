@@ -1,32 +1,43 @@
 import pandas as pd
 import os
-import mlflow
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+import mlflow
 
-def run_training():
-    data_path = 'namadataset_preprocessing/weather_processed.csv'
+mlflow.set_experiment("Weather_Basic_Experiment")
+
+mlflow.autolog()
+
+def train_basic_model():
+    # Memuat Dataset
+    if os.path.exists('namadataset_preprocessing/weather_processed.csv'):
+        data_path = 'namadataset_preprocessing/weather_processed.csv'
+    elif os.path.exists('../namadataset_preprocessing/weather_processed.csv'):
+        data_path = '../namadataset_preprocessing/weather_processed.csv'
+    else:
+        print("Error: File 'weather_processed.csv' tidak ditemukan!")
+        return
+
+    print(f"Membaca dataset dari: {data_path}")
     df = pd.read_csv(data_path)
     
+    # Memisahkan fitur dan target 
     X = df.drop(columns=['Weather Type'])
     y = df['Weather Type']
+    
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    with mlflow.start_run(run_name="CI_Pipeline_Run") as run:
-        rf = RandomForestClassifier(n_estimators=100, random_state=42)
-        rf.fit(X_train, y_train)
+    print("Memulai pelatihan model Basic...")
+    
+    with mlflow.start_run(run_name="RandomForest_Basic"):
+        # MODEL DASAR TANPA TUNING
+        model = RandomForestClassifier(random_state=42)
         
-        y_pred = rf.predict(X_test)
-        acc = accuracy_score(y_test, y_pred)
-        mlflow.log_metric("accuracy", acc)
+        # Proses fit ini akan otomatis mlflow.autolog() untuk mencatat semuanya
+        model.fit(X_train, y_train)
         
-        # Log model ke dalam folder "model"
-        mlflow.sklearn.log_model(rf, "model")
-        
-        # Simpan RUN_ID ke file teks agar bisa dibaca oleh GitHub Actions untuk build Docker
-        with open("run_id.txt", "w") as f:
-            f.write(run.info.run_id)
+        print("Pelatihan Kriteria Basic Selesai!")
+        print("Parameter, metrik, dan model telah otomatis dicatat di lokal (folder mlruns).")
 
 if __name__ == "__main__":
-    run_training()
+    train_basic_model()
