@@ -71,5 +71,5 @@ jobs:
           # 4. Build image menggunakan jalur LOKAL (Tembus langsung, tanpa sistem 'runs:/')
           mlflow models build-docker -m "$MODEL_DIR" -n $IMAGE_NAME
           
-          # 5. Push image ke Docker Hub
+          # 5. Push image ke Docker Hubs
           docker push $IMAGE_NAME
