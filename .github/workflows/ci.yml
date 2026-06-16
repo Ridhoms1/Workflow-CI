@@ -63,7 +63,7 @@ jobs:
           RUN_ID=$(python -c "import mlflow; df=mlflow.search_runs(); print(df['run_id'].iloc[0] if not df.empty else 'Lokal/Manual')")
           echo "Ditemukan Run ID: $RUN_ID"
           
-          # 3. Format nama image diubah otomatis menjadi huruf KECIL semua
+          # 3. Format nama image diubah otomatis menjadi huruf KECIL semuA
           USERNAME=$(echo "${{ secrets.DOCKER_USERNAME }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_NAME="$USERNAME/weather-model:latest"
           echo "Membangun Docker Image: $IMAGE_NAME"
